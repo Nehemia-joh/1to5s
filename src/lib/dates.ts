@@ -1,7 +1,9 @@
+import { fromZonedTime } from "date-fns-tz";
+import { eq } from "drizzle-orm";
+
 import { getDb } from "@/db";
 import { extraDays, holidays } from "@/db/schema";
-import { TIMEZONE } from "@/lib/constants";
-import { eq } from "drizzle-orm";
+import { CUTOFF_HOUR, CUTOFF_MINUTE, TIMEZONE } from "@/lib/constants";
 
 export type DayType = "holiday" | "weekend" | "extra" | "working";
 
@@ -68,4 +70,26 @@ export async function previousWorkingDay(dateKey: string, maxLookback = 14): Pro
     }
   }
   return null;
+}
+
+/** The UTC instant of the submission cutoff for a given local date. */
+export function cutoffInstant(dateKey: string): Date {
+  const hh = String(CUTOFF_HOUR).padStart(2, "0");
+  const mm = String(CUTOFF_MINUTE).padStart(2, "0");
+  return fromZonedTime(`${dateKey}T${hh}:${mm}:00`, TIMEZONE);
+}
+
+export function isPastCutoff(dateKey: string, now: Date = new Date()): boolean {
+  return now.getTime() >= cutoffInstant(dateKey).getTime();
+}
+
+/** e.g. "Monday, Sep 15" — for display only. */
+export function formatDateLabel(dateKey: string): string {
+  const d = new Date(`${dateKey}T12:00:00Z`);
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "UTC",
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+  }).format(d);
 }
