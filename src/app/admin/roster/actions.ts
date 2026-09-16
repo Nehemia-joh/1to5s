@@ -2,6 +2,7 @@
 
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { read, utils } from "xlsx";
 import { z } from "zod";
 
 import { getDb } from "@/db";
@@ -45,6 +46,97 @@ export async function addRosterMember(_prevState: AddMemberState, formData: Form
 
   revalidatePath("/admin/roster");
   return undefined;
+}
+
+const emailSchema = z.string().trim().toLowerCase().email();
+
+function normalizeKey(key: string): string {
+  return key.trim().toLowerCase();
+}
+
+function findField(row: Record<string, unknown>, candidates: string[]): string {
+  const normalized = new Map(Object.entries(row).map(([k, v]) => [normalizeKey(k), v]));
+  for (const candidate of candidates) {
+    const value = normalized.get(candidate);
+    if (value != null && String(value).trim() !== "") return String(value).trim();
+  }
+  return "";
+}
+
+export type ImportRosterState =
+  | { error: string; summary?: undefined }
+  | { error?: undefined; summary: { created: number; skipped: number; invalid: number; invalidRows: string[] } }
+  | undefined;
+
+export async function importRosterFromExcel(_prevState: ImportRosterState, formData: FormData): Promise<ImportRosterState> {
+  const admin = await requireAdmin();
+
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    return { error: "Choose an Excel (.xlsx) or CSV file first." };
+  }
+
+  let rows: Record<string, unknown>[];
+  try {
+    const buffer = await file.arrayBuffer();
+    const workbook = read(buffer, { type: "buffer" });
+    const firstSheet = workbook.SheetNames[0];
+    rows = utils.sheet_to_json(workbook.Sheets[firstSheet], { defval: "" });
+  } catch {
+    return { error: "Couldn't read that file. Make sure it's a valid .xlsx or .csv export." };
+  }
+
+  const db = getDb();
+  const existingUsers = await db.select({ email: users.email }).from(users);
+  const existingEmails = new Set(existingUsers.map((u) => u.email));
+
+  const toInsert: { name: string; email: string; role: "member" | "admin" }[] = [];
+  const seenInBatch = new Set<string>();
+  let skipped = 0;
+  let invalid = 0;
+  const invalidRows: string[] = [];
+
+  rows.forEach((row, index) => {
+    const rawName = findField(row, ["name", "full name", "fullname"]);
+    const rawEmail = findField(row, ["email", "email address"]);
+    const rawRole = findField(row, ["role"]);
+
+    if (!rawName && !rawEmail) return; // blank row
+
+    const emailResult = emailSchema.safeParse(rawEmail);
+    if (!rawName || !emailResult.success) {
+      invalid++;
+      invalidRows.push(`Row ${index + 2}: ${rawName || "(no name)"} / ${rawEmail || "(no email)"}`);
+      return;
+    }
+
+    const email = emailResult.data;
+    if (existingEmails.has(email) || seenInBatch.has(email)) {
+      skipped++;
+      return;
+    }
+
+    seenInBatch.add(email);
+    toInsert.push({
+      name: rawName,
+      email,
+      role: rawRole.toLowerCase().includes("admin") ? "admin" : "member",
+    });
+  });
+
+  if (toInsert.length > 0) {
+    await db.insert(users).values(toInsert.map((r) => ({ ...r, active: true }))).onConflictDoNothing({ target: users.email });
+  }
+
+  await writeAuditLog({
+    actorId: Number(admin.sub),
+    action: "roster.import",
+    targetType: "roster",
+    metadata: { created: toInsert.length, skipped, invalid, fileName: file.name },
+  });
+
+  revalidatePath("/admin/roster");
+  return { summary: { created: toInsert.length, skipped, invalid, invalidRows } };
 }
 
 export async function setRosterActive(userId: number, active: boolean): Promise<void> {

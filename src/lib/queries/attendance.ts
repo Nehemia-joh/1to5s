@@ -1,4 +1,4 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
 
 import { getDb } from "@/db";
 import { attendance, users } from "@/db/schema";
@@ -29,4 +29,19 @@ export async function getBoardForDate(date: string): Promise<BoardRow[]> {
     .orderBy(asc(users.name));
 
   return rows;
+}
+
+export async function getAttendanceForDates(dates: string[]): Promise<Map<string, string>> {
+  if (dates.length === 0) return new Map();
+  const db = getDb();
+  const rows = await db
+    .select({ userId: attendance.userId, date: attendance.date, status: attendance.status })
+    .from(attendance)
+    .where(inArray(attendance.date, dates));
+
+  const map = new Map<string, string>();
+  for (const row of rows) {
+    map.set(`${row.userId}:${row.date}`, row.status);
+  }
+  return map;
 }

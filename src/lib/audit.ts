@@ -3,6 +3,7 @@ import { auditLog } from "@/db/schema";
 
 export type AuditAction =
   | "roster.add"
+  | "roster.import"
   | "roster.deactivate"
   | "roster.reactivate"
   | "calendar.add_holiday"

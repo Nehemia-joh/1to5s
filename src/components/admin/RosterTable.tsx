@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useTransition } from "react";
 
 import { setRosterActive } from "@/app/admin/roster/actions";
@@ -46,7 +47,11 @@ export function RosterTable({ roster }: { roster: RosterRow[] }) {
       <TableBody>
         {roster.map((person) => (
           <TableRow key={person.id}>
-            <TableCell>{person.name}</TableCell>
+            <TableCell>
+              <Link href={`/admin/users/${person.id}`} className="text-primary hover:underline">
+                {person.name}
+              </Link>
+            </TableCell>
             <TableCell className="text-muted-foreground">{person.email}</TableCell>
             <TableCell>
               <Badge variant={person.role === "admin" ? "default" : "outline"}>{person.role}</Badge>

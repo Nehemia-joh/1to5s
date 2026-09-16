@@ -42,6 +42,23 @@ export function addDaysToKey(dateKey: string, delta: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+/** The Monday on/before `dateKey`. */
+export function startOfWeek(dateKey: string): string {
+  const day = weekdayOf(dateKey); // 0 = Sunday .. 6 = Saturday
+  const offsetToMonday = day === 0 ? -6 : 1 - day;
+  return addDaysToKey(dateKey, offsetToMonday);
+}
+
+export function weekDates(weekStartKey: string): string[] {
+  return Array.from({ length: 7 }, (_, i) => addDaysToKey(weekStartKey, i));
+}
+
+/** e.g. "Mon 15" — short label for a grid column header. */
+export function formatShortDateLabel(dateKey: string): string {
+  const d = new Date(`${dateKey}T12:00:00Z`);
+  return new Intl.DateTimeFormat("en-US", { timeZone: "UTC", weekday: "short", day: "numeric" }).format(d);
+}
+
 export async function classifyDate(dateKey: string): Promise<DayType> {
   const db = getDb();
   const [holiday] = await db.select().from(holidays).where(eq(holidays.date, dateKey)).limit(1);
@@ -92,4 +109,15 @@ export function formatDateLabel(dateKey: string): string {
     month: "short",
     day: "numeric",
   }).format(d);
+}
+
+/** e.g. "Sep 15, 2:03 PM" in TIMEZONE — for audit-log style timestamps. */
+export function formatDateTimeLabel(date: Date): string {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: TIMEZONE,
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
 }
