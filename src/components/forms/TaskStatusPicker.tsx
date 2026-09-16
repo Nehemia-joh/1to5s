@@ -2,7 +2,7 @@
 
 import { useTransition } from "react";
 
-import { markPreviousTaskStatus } from "@/app/form/actions";
+import { markTaskStatus } from "@/app/form/actions";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -21,7 +21,7 @@ export function TaskStatusPicker({ taskId, initialStatus }: { taskId: number; in
       onValueChange={(value) => {
         if (!value) return;
         startTransition(async () => {
-          await markPreviousTaskStatus(taskId, value);
+          await markTaskStatus(taskId, value);
         });
       }}
     >

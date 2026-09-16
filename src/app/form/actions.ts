@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -69,22 +69,36 @@ export async function saveEntry(_prevState: SaveEntryState, formData: FormData):
     entryId = created.id;
   }
 
-  await db.delete(entryTasks).where(eq(entryTasks.entryId, entryId));
-
-  const taskRows = [
+  const allSlots = [
     { slot: 1, text: data.task1 },
     { slot: 2, text: data.task2 },
     { slot: 3, text: data.task3 },
-  ].filter((t) => t.text);
+  ];
+  const filledSlots = allSlots.filter((t) => t.text);
+  const emptySlots = allSlots.filter((t) => !t.text);
 
-  if (taskRows.length > 0) {
-    await db.insert(entryTasks).values(
-      taskRows.map((t) => ({
-        entryId,
-        slot: t.slot,
-        taskText: t.text,
-      })),
+  if (emptySlots.length > 0) {
+    await db.delete(entryTasks).where(
+      and(
+        eq(entryTasks.entryId, entryId),
+        inArray(
+          entryTasks.slot,
+          emptySlots.map((t) => t.slot),
+        ),
+      ),
     );
+  }
+
+  // Upsert (not delete+insert) so an in-progress status set earlier today
+  // survives someone just fixing a typo in the task text later the same day.
+  for (const t of filledSlots) {
+    await db
+      .insert(entryTasks)
+      .values({ entryId, slot: t.slot, taskText: t.text })
+      .onConflictDoUpdate({
+        target: [entryTasks.entryId, entryTasks.slot],
+        set: { taskText: t.text },
+      });
   }
 
   if (!existing) {
@@ -108,7 +122,7 @@ const markStatusSchema = z.object({
   status: z.enum(taskStatus.enumValues),
 });
 
-export async function markPreviousTaskStatus(taskId: number, status: string): Promise<void> {
+export async function markTaskStatus(taskId: number, status: string): Promise<void> {
   const session = await requireUser();
   const userId = Number(session.sub);
 

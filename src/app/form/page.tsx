@@ -15,7 +15,6 @@ export default async function FormPage({ searchParams }: { searchParams: Promise
   const dayType = await classifyDate(today);
 
   const existing = await getEntryWithTasks(userId, today);
-  const taskByPos = (slot: number) => existing?.tasks.find((t) => t.slot === slot)?.taskText ?? "";
 
   const prevDay = await previousWorkingDay(today);
   const prevEntry = prevDay ? await getEntryWithTasks(userId, prevDay) : null;
@@ -47,13 +46,9 @@ export default async function FormPage({ searchParams }: { searchParams: Promise
             <CardContent>
               <DailyEntryForm
                 today={today}
-                initial={{
-                  task1: taskByPos(1),
-                  task2: taskByPos(2),
-                  task3: taskByPos(3),
-                  blocker: existing?.blocker ?? "",
-                  yesterdayComment: existing?.yesterdayComment ?? "",
-                }}
+                existingTasks={existing?.tasks ?? []}
+                blocker={existing?.blocker ?? ""}
+                yesterdayComment={existing?.yesterdayComment ?? ""}
               />
             </CardContent>
           </Card>
