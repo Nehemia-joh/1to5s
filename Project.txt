@@ -1,0 +1,188 @@
+DAILY 1-5S — PRODUCT SPEC
+As of: 2026-09-16
+
+===================================================================
+1. OVERVIEW
+===================================================================
+Daily 1-5s replaces the daily standup with a two-minute async form.
+Each working day, every person on the roster answers one form: up
+to three things they're doing today (at least one required), a
+blocker, and a comment on yesterday's work. An admin manages the
+roster, holidays, and cutoff times, and reviews everyone's history,
+logs, and summaries from one place.
+
+The current build covers login, the core form, and most of the
+admin roster/holiday setup end to end. The remaining gaps are
+concentrated in richer admin views (trends, graphs, a monthly
+rollup) and a few form details (date picker, Excel roster import,
+configurable cutoff/close behavior).
+
+===================================================================
+2. TECH STACK & BRANDING
+===================================================================
+Stack:
+  - Next.js (app + API routes)
+  - Neon (serverless Postgres)
+  - Vercel (hosting & deploys)
+  - GitHub + Git (source control)
+
+Colors:
+  Token             Hex       Use
+  ----------------  --------  ---------------------------------
+  Background        #ECECEC   Page background
+  Primary           #002368   Main theme; primary text on light
+                               surfaces
+  Primary-contrast  #FFFFFF   Text/icons on the primary color
+  Highlight         #80BFEC   Highlighting, active/selected
+                               states
+  Accent            #FFC952   Decorations, shapes, small
+                               emphasis
+  Text              #000000   Body text
+
+Typography:
+  Montserrat Light (recorded in the source sketch as "Messarat
+  Light" — needs confirming: exact family and weight, before it's
+  wired into the codebase).
+
+===================================================================
+3. ROLES & FLOW
+===================================================================
+  Users  --Adds-->  "Adds 1-5s" (one form per person, per day)
+  Admin  --Do-->     "Adds 1-5s"
+  Admin  --Do-->     Admin capabilities
+  "Adds 1-5s" --Do--> Person filling a 1-5
+  "Adds 1-5s" --Do--> The 1-5 form itself
+
+Two roles: Users fill in one 1-5 per working day; Admin configures
+the roster, holidays, and cutoff, and consumes the results (views,
+logs, summaries).
+
+===================================================================
+4. THE 1-5 FORM
+===================================================================
+ 1. Login by email
+    Status: DONE
+
+ 2. Five slots: 1-3 today (at least one required), 4 blockers,
+    5 yesterday comments
+    Status: PARTIAL
+    Notes: Only slots 1-3 exist on the form; blockers and
+    yesterday-comments slots are missing.
+
+ 3. Today's date by default
+    Status: PARTIAL
+    Notes: Defaults correctly but has no date picker to change it.
+
+ 4. Shows previous tasks
+    Status: DONE
+
+ 5. Mark completed / in progress / abandoned / not started
+    Status: PARTIAL
+    Notes: Admin cannot rename these phases.
+
+ 6. Skip holidays the admin marked
+    Status: DONE
+
+ 7. Skip weekends; admin can add an extra 1-5 day
+    Status: DONE
+
+ 8. Admin adds people one by one (name + email) or via Excel
+    Status: PARTIAL
+    Notes: One-by-one works; Excel import missing.
+
+ 9. Track skipped dates with no reason given
+    Status: DONE
+
+10. Reason required when someone skips
+    Status: DONE
+
+11. Admin sets cutoff and chooses close vs. late
+    Status: PARTIAL
+    Notes: Cutoff is fixed at 9:30 a.m.; a cron job marks entries
+    late/missed, but the admin can't configure the time or the
+    close-vs-late behavior.
+
+12. Tasks stay editable
+    Status: PARTIAL
+    Notes: Today's entry is editable; past entries are locked.
+
+===================================================================
+5. PERSON FILLING A 1-5
+===================================================================
+ 1. Login by email
+    Status: DONE
+
+ 2. Fill in the form
+    Status: DONE
+
+ 3. View previous tasks (uneditable)
+    Status: DONE
+
+ 4. Mark completed / in progress / abandoned / not started
+    Status: PARTIAL
+    Notes: End of day currently only supports tick-done vs.
+    still-going, not the full four-state set.
+
+===================================================================
+6. ADMIN CAPABILITIES
+===================================================================
+1a. View every user's 1-5s
+    Status: DONE
+
+1b. See trend over time
+    Status: MISSING
+
+ 2. Graphs of users and accomplishments
+    Status: MISSING
+
+ 3. Have logs
+    Status: PARTIAL
+
+ 4. Mark public holidays
+    Status: DONE
+
+ 5. Daily / weekly / monthly summary
+    Status: PARTIAL
+    Notes: Daily board and a weekly page exist; no monthly
+    rollup.
+
+===================================================================
+7. STATUS SUMMARY
+===================================================================
+  Area                     Done   Partial   Missing
+  -----------------------  -----  --------  --------
+  Admin capabilities         2       2         2
+  Person filling a 1-5       3       1         0
+  The 1-5 form                6       6         0
+  -----------------------  -----  --------  --------
+  Total                      11       9         2
+
+Fully missing:
+  - Trend-over-time view
+  - Graphs of users/accomplishments
+
+Partial — close next:
+  - Four-slot form (add blockers + yesterday comment)
+  - Date picker
+  - Configurable four-state task status (with admin-renamable
+    phases)
+  - Excel roster import
+  - Configurable cutoff/close behavior
+  - Past-entry editability rules
+  - Admin logs
+  - Monthly summary
+
+===================================================================
+8. BACKLOG (NOT YET SCOPED)
+===================================================================
+Captured from the source sketch as future ideas for the 1-5s
+feature area, not yet designed or estimated:
+  - Feedback thread on a person's 1-5
+  - End-of-day close (tick what finished)
+  - 9:30 a.m. auto-close for late/missed entries, plus an email
+    digest
+  - Skip today with a reason
+  - Empty slots fillable from that person's own prior work
+  - 1-5s surfaced on a department desk, not only on a personal
+    page
+  - Thursday pulse (wins / risks / help) for the desk
