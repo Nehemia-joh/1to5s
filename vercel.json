@@ -1,0 +1,6 @@
+{
+  "crons": [
+    { "path": "/api/cron/cutoff", "schedule": "30 6 * * *" },
+    { "path": "/api/cron/finalize", "schedule": "55 20 * * *" }
+  ]
+}
