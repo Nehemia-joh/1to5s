@@ -1,6 +1,6 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { read, utils } from "xlsx";
 import { z } from "zod";
@@ -153,4 +153,35 @@ export async function setRosterActive(userId: number, active: boolean): Promise<
   });
 
   revalidatePath("/admin/roster");
+}
+
+export type SetRoleResult = { error?: string } | undefined;
+
+export async function setRosterRole(userId: number, role: "member" | "admin"): Promise<SetRoleResult> {
+  const admin = await requireAdmin();
+  const db = getDb();
+
+  if (role === "member") {
+    const [{ count }] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(users)
+      .where(and(eq(users.role, "admin"), eq(users.active, true)));
+    const [target] = await db.select({ role: users.role }).from(users).where(eq(users.id, userId)).limit(1);
+
+    if (target?.role === "admin" && count <= 1) {
+      return { error: "Can't remove the last admin. Promote someone else first." };
+    }
+  }
+
+  await db.update(users).set({ role }).where(eq(users.id, userId));
+
+  await writeAuditLog({
+    actorId: Number(admin.sub),
+    action: role === "admin" ? "roster.promote_admin" : "roster.demote_admin",
+    targetType: "user",
+    targetId: String(userId),
+  });
+
+  revalidatePath("/admin/roster");
+  return undefined;
 }

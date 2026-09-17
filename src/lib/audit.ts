@@ -6,6 +6,8 @@ export type AuditAction =
   | "roster.import"
   | "roster.deactivate"
   | "roster.reactivate"
+  | "roster.promote_admin"
+  | "roster.demote_admin"
   | "calendar.add_holiday"
   | "calendar.remove_holiday"
   | "calendar.add_extra_day"
