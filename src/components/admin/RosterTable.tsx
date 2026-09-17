@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 
 import { setRosterActive } from "@/app/admin/roster/actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 type RosterRow = {
@@ -33,38 +34,64 @@ function ToggleActiveButton({ userId, active }: { userId: number; active: boolea
 }
 
 export function RosterTable({ roster }: { roster: RosterRow[] }) {
+  const [query, setQuery] = useState("");
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return roster;
+    return roster.filter((person) => person.name.toLowerCase().includes(q) || person.email.toLowerCase().includes(q));
+  }, [roster, query]);
+
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Name</TableHead>
-          <TableHead>Email</TableHead>
-          <TableHead>Role</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead className="text-right">Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {roster.map((person) => (
-          <TableRow key={person.id}>
-            <TableCell>
-              <Link href={`/admin/users/${person.id}`} className="text-primary hover:underline">
-                {person.name}
-              </Link>
-            </TableCell>
-            <TableCell className="text-muted-foreground">{person.email}</TableCell>
-            <TableCell>
-              <Badge variant={person.role === "admin" ? "default" : "outline"}>{person.role}</Badge>
-            </TableCell>
-            <TableCell>
-              <Badge variant={person.active ? "secondary" : "outline"}>{person.active ? "Active" : "Inactive"}</Badge>
-            </TableCell>
-            <TableCell className="text-right">
-              <ToggleActiveButton userId={person.id} active={person.active} />
-            </TableCell>
+    <div className="flex flex-col gap-3">
+      <Input
+        type="search"
+        placeholder="Search by name or email…"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        className="max-w-sm"
+      />
+
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Email</TableHead>
+            <TableHead>Role</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {filtered.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={5} className="text-center text-muted-foreground">
+                No one matches &quot;{query}&quot;.
+              </TableCell>
+            </TableRow>
+          ) : (
+            filtered.map((person) => (
+              <TableRow key={person.id}>
+                <TableCell>
+                  <Link href={`/admin/users/${person.id}`} className="text-primary hover:underline">
+                    {person.name}
+                  </Link>
+                </TableCell>
+                <TableCell className="text-muted-foreground">{person.email}</TableCell>
+                <TableCell>
+                  <Badge variant={person.role === "admin" ? "default" : "outline"}>{person.role}</Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge variant={person.active ? "secondary" : "outline"}>{person.active ? "Active" : "Inactive"}</Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                  <ToggleActiveButton userId={person.id} active={person.active} />
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </div>
   );
 }
