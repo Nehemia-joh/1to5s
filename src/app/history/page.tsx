@@ -1,7 +1,7 @@
 import { requireUser } from "@/lib/auth-guard";
 import { formatDateLabel } from "@/lib/dates";
 import { getUserHistory } from "@/lib/queries/entries";
-import { NavBar } from "@/components/layout/NavBar";
+import { memberLinks, NavBar } from "@/components/layout/NavBar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
@@ -19,7 +19,7 @@ export default async function HistoryPage() {
 
   return (
     <>
-      <NavBar name={session.name} links={[{ href: "/form", label: "Today" }, { href: "/history", label: "History" }]} />
+      <NavBar name={session.name} links={memberLinks(session.role === "admin")} />
       <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-8">
         <h1 className="text-primary text-xl font-medium">Your history</h1>
 

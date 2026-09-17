@@ -3,6 +3,15 @@ import Link from "next/link";
 import { logout } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/button";
 
+/** Nav links for /form and /history — adds a way back to the admin section for admins. */
+export function memberLinks(isAdmin: boolean) {
+  const links = [
+    { href: "/form", label: "Today" },
+    { href: "/history", label: "History" },
+  ];
+  return isAdmin ? [...links, { href: "/admin/board", label: "Admin" }] : links;
+}
+
 export function NavBar({ name, links }: { name: string; links: { href: string; label: string }[] }) {
   return (
     <header className="border-b border-border bg-card">

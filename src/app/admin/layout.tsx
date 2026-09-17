@@ -2,6 +2,7 @@ import { requireAdmin } from "@/lib/auth-guard";
 import { NavBar } from "@/components/layout/NavBar";
 
 const ADMIN_LINKS = [
+  { href: "/form", label: "My 1-5" },
   { href: "/admin/board", label: "Board" },
   { href: "/admin/weekly", label: "Weekly" },
   { href: "/admin/roster", label: "Roster" },
