@@ -6,7 +6,7 @@ import { read, utils } from "xlsx";
 import { z } from "zod";
 
 import { getDb } from "@/db";
-import { users } from "@/db/schema";
+import { users, entries, entryTasks, attendance } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth-guard";
 import { writeAuditLog } from "@/lib/audit";
 
@@ -180,6 +180,62 @@ export async function setRosterRole(userId: number, role: "member" | "admin"): P
     action: role === "admin" ? "roster.promote_admin" : "roster.demote_admin",
     targetType: "user",
     targetId: String(userId),
+  });
+
+  revalidatePath("/admin/roster");
+  return undefined;
+}
+
+export type DeleteMemberResult = { error?: string } | undefined;
+
+export async function deleteRosterMember(userId: number): Promise<DeleteMemberResult> {
+  const admin = await requireAdmin();
+  const db = getDb();
+
+  // Check if user exists
+  const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  if (!user) {
+    return { error: "User not found." };
+  }
+
+  // Prevent deleting yourself
+  if (Number(admin.sub) === userId) {
+    return { error: "You cannot delete your own account." };
+  }
+
+  // Check if this is the last admin
+  if (user.role === "admin") {
+    const [{ count }] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(users)
+      .where(and(eq(users.role, "admin"), eq(users.active, true)));
+
+    if (count <= 1) {
+      return { error: "Cannot delete the last admin. Promote someone else first." };
+    }
+  }
+
+  // Delete related data first (cascade would handle this, but being explicit)
+  // Delete entry tasks for this user's entries
+  const userEntries = await db.select({ id: entries.id }).from(entries).where(eq(entries.userId, userId));
+  if (userEntries.length > 0) {
+    const entryIds = userEntries.map((e) => e.id);
+    await db.delete(entryTasks).where(sql`${entryTasks.entryId} IN ${entryIds}`);
+    await db.delete(entries).where(eq(entries.userId, userId));
+  }
+
+  // Delete attendance records
+  await db.delete(attendance).where(eq(attendance.userId, userId));
+
+  // Finally delete the user
+  await db.delete(users).where(eq(users.id, userId));
+
+  await writeAuditLog({
+    actorId: Number(admin.sub),
+    action: "roster.delete",
+    targetType: "user",
+    targetId: String(userId),
+    metadata: { name: user.name, email: user.email },
   });
 
   revalidatePath("/admin/roster");

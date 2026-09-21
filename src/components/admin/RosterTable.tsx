@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 
-import { setRosterActive, setRosterRole } from "@/app/admin/roster/actions";
+import { setRosterActive, setRosterRole, deleteRosterMember } from "@/app/admin/roster/actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Trash2, UserX, UserCheck, Shield, ShieldOff, Loader2 } from "lucide-react";
 
 type RosterRow = {
   id: number;
@@ -27,8 +29,10 @@ function ToggleActiveButton({ userId, active }: { userId: number; active: boolea
       size="sm"
       disabled={pending}
       onClick={() => startTransition(() => setRosterActive(userId, !active))}
+      className="gap-1.5"
     >
-      {active ? "Deactivate" : "Reactivate"}
+      {active ? <UserX className="h-3.5 w-3.5" /> : <UserCheck className="h-3.5 w-3.5" />}
+      <span className="hidden sm:inline">{active ? "Deactivate" : "Reactivate"}</span>
     </Button>
   );
 }
@@ -44,6 +48,7 @@ function ToggleRoleButton({ userId, role }: { userId: number; role: "member" | "
         variant="outline"
         size="sm"
         disabled={pending}
+        className="gap-1.5"
         onClick={() =>
           startTransition(async () => {
             setError(null);
@@ -52,10 +57,68 @@ function ToggleRoleButton({ userId, role }: { userId: number; role: "member" | "
           })
         }
       >
-        {role === "admin" ? "Remove admin" : "Make admin"}
+        {role === "admin" ? <ShieldOff className="h-3.5 w-3.5" /> : <Shield className="h-3.5 w-3.5" />}
+        <span className="hidden sm:inline">{role === "admin" ? "Demote" : "Make admin"}</span>
       </Button>
       {error ? <p className="max-w-40 text-right text-xs text-destructive">{error}</p> : null}
     </div>
+  );
+}
+
+function DeleteMemberButton({ userId, name }: { userId: number; name: string }) {
+  const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger
+        render={
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="text-destructive hover:text-destructive hover:bg-destructive/10 gap-1.5"
+          />
+        }
+      >
+        <Trash2 className="h-3.5 w-3.5" />
+        <span className="hidden sm:inline">Delete</span>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Delete {name}?</DialogTitle>
+          <DialogDescription>
+            This will permanently remove this user and all their data including tasks,
+            entries, and attendance records. This action cannot be undone.
+          </DialogDescription>
+        </DialogHeader>
+        {error ? <p className="text-sm text-destructive">{error}</p> : null}
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            disabled={pending}
+            onClick={() => {
+              startTransition(async () => {
+                setError(null);
+                const result = await deleteRosterMember(userId);
+                if (result?.error) {
+                  setError(result.error);
+                } else {
+                  setOpen(false);
+                }
+              });
+            }}
+          >
+            {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+            Delete permanently
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -78,7 +141,8 @@ export function RosterTable({ roster }: { roster: RosterRow[] }) {
         className="max-w-sm"
       />
 
-      <div className="overflow-x-auto">
+      {/* Desktop Table */}
+      <div className="hidden md:block overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -100,7 +164,7 @@ export function RosterTable({ roster }: { roster: RosterRow[] }) {
               filtered.map((person) => (
                 <TableRow key={person.id}>
                   <TableCell>
-                    <Link href={`/admin/users/${person.id}`} className="text-primary hover:underline">
+                    <Link href={`/admin/users/${person.id}`} className="text-primary hover:underline font-medium">
                       {person.name}
                     </Link>
                   </TableCell>
@@ -115,6 +179,7 @@ export function RosterTable({ roster }: { roster: RosterRow[] }) {
                     <div className="flex justify-end gap-2">
                       <ToggleRoleButton userId={person.id} role={person.role} />
                       <ToggleActiveButton userId={person.id} active={person.active} />
+                      <DeleteMemberButton userId={person.id} name={person.name} />
                     </div>
                   </TableCell>
                 </TableRow>
@@ -122,6 +187,37 @@ export function RosterTable({ roster }: { roster: RosterRow[] }) {
             )}
           </TableBody>
         </Table>
+      </div>
+
+      {/* Mobile Cards */}
+      <div className="md:hidden flex flex-col gap-3">
+        {filtered.length === 0 ? (
+          <p className="text-center text-muted-foreground py-8">
+            No one matches &quot;{query}&quot;
+          </p>
+        ) : (
+          filtered.map((person) => (
+            <div key={person.id} className="rounded-lg border bg-card p-4 space-y-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <Link href={`/admin/users/${person.id}`} className="text-primary hover:underline font-medium block truncate">
+                    {person.name}
+                  </Link>
+                  <p className="text-sm text-muted-foreground truncate">{person.email}</p>
+                </div>
+                <div className="flex gap-1.5 shrink-0">
+                  <Badge variant={person.role === "admin" ? "default" : "outline"}>{person.role}</Badge>
+                  <Badge variant={person.active ? "secondary" : "outline"}>{person.active ? "Active" : "Inactive"}</Badge>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <ToggleRoleButton userId={person.id} role={person.role} />
+                <ToggleActiveButton userId={person.id} active={person.active} />
+                <DeleteMemberButton userId={person.id} name={person.name} />
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
