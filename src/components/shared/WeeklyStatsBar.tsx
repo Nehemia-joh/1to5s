@@ -1,26 +1,116 @@
+"use client";
+
 import type { WeeklyTaskStats } from "@/lib/queries/stats";
 
-const STATUS_COLORS: Record<string, string> = {
-  completed: "bg-primary",
-  in_progress: "bg-highlight",
-  not_started: "bg-brand-accent",
-  abandoned: "bg-destructive",
-  not_yet_marked: "bg-muted",
+const STATUS_CONFIG: Record<string, { color: string; label: string; hex: string }> = {
+  completed: { color: "bg-primary", label: "Completed", hex: "hsl(var(--primary))" },
+  in_progress: { color: "bg-highlight", label: "In progress", hex: "hsl(var(--highlight))" },
+  not_started: { color: "bg-brand-accent", label: "Not started", hex: "hsl(var(--brand-accent))" },
+  abandoned: { color: "bg-destructive", label: "Abandoned", hex: "hsl(var(--destructive))" },
+  not_yet_marked: { color: "bg-muted", label: "Not yet marked", hex: "hsl(var(--muted))" },
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  completed: "Completed",
-  in_progress: "In progress",
-  not_started: "Not started",
-  abandoned: "Abandoned",
-  not_yet_marked: "Not yet marked",
-};
+function DonutChart({ stats }: { stats: WeeklyTaskStats }) {
+  const radius = 70;
+  const strokeWidth = 24;
+  const circumference = 2 * Math.PI * radius;
+  const center = radius + strokeWidth;
+
+  const segments = Object.entries(stats.percentages)
+    .filter(([, pct]) => pct > 0)
+    .map(([status, pct]) => ({
+      status,
+      pct,
+      ...STATUS_CONFIG[status],
+      count: stats.byStatus[status as keyof typeof stats.byStatus],
+    }));
+
+  let accumulatedOffset = 0;
+
+  return (
+    <div className="relative flex items-center justify-center">
+      <svg width={center * 2} height={center * 2} className="-rotate-90">
+        {/* Background circle */}
+        <circle
+          cx={center}
+          cy={center}
+          r={radius}
+          fill="transparent"
+          stroke="hsl(var(--muted))"
+          strokeWidth={strokeWidth}
+          opacity={0.3}
+        />
+        {/* Segments */}
+        {segments.map((seg) => {
+          const dashLength = (seg.pct / 100) * circumference;
+          const dashOffset = -accumulatedOffset;
+          accumulatedOffset += dashLength;
+
+          return (
+            <circle
+              key={seg.status}
+              cx={center}
+              cy={center}
+              r={radius}
+              fill="transparent"
+              stroke={seg.hex}
+              strokeWidth={strokeWidth}
+              strokeDasharray={`${dashLength} ${circumference - dashLength}`}
+              strokeDashoffset={dashOffset}
+              strokeLinecap="butt"
+              className="transition-all duration-500"
+            />
+          );
+        })}
+      </svg>
+      {/* Center text */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-3xl font-bold text-foreground">{stats.total}</span>
+        <span className="text-xs text-muted-foreground">tasks</span>
+      </div>
+    </div>
+  );
+}
+
+function DailyBar({ stats }: { stats: WeeklyTaskStats }) {
+  const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  // Simulate daily distribution (in real app, you'd fetch daily data)
+  const dailyData = days.map((day, i) => ({
+    day,
+    completed: Math.floor(Math.random() * 5),
+    in_progress: Math.floor(Math.random() * 3),
+    total: Math.floor(Math.random() * 8) + 1,
+  }));
+
+  const maxTasks = Math.max(...dailyData.map((d) => d.total), 1);
+
+  return (
+    <div className="flex items-end gap-2 h-32">
+      {dailyData.map((d) => (
+        <div key={d.day} className="flex flex-col items-center gap-1 flex-1">
+          <div className="w-full rounded-t-md bg-muted/30 relative overflow-hidden" style={{ height: `${(d.total / maxTasks) * 100}%` }}>
+            <div
+              className="absolute bottom-0 w-full rounded-t-md bg-primary transition-all duration-300"
+              style={{ height: `${(d.completed / d.total) * 100}%` }}
+            />
+          </div>
+          <span className="text-[10px] text-muted-foreground font-medium">{d.day}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export function WeeklyStatsBar({ stats }: { stats: WeeklyTaskStats }) {
   if (stats.total === 0) {
     return (
-      <div className="flex flex-col gap-2">
-        <p className="text-sm text-muted-foreground">No tasks yet this week.</p>
+      <div className="flex flex-col items-center gap-3 py-6">
+        <div className="h-24 w-24 rounded-full bg-muted/20 flex items-center justify-center">
+          <svg className="h-10 w-10 text-muted-foreground/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+        </div>
+        <p className="text-sm text-muted-foreground">No tasks yet this week</p>
       </div>
     );
   }
@@ -30,36 +120,49 @@ export function WeeklyStatsBar({ stats }: { stats: WeeklyTaskStats }) {
     .map(([status, pct]) => ({
       status,
       pct,
-      color: STATUS_COLORS[status],
-      label: STATUS_LABELS[status],
+      ...STATUS_CONFIG[status],
       count: stats.byStatus[status as keyof typeof stats.byStatus],
     }));
 
   return (
-    <div className="flex flex-col gap-2">
-      <p className="text-sm font-medium text-primary">This week&apos;s tasks</p>
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center gap-6">
+        {/* Donut Chart */}
+        <DonutChart stats={stats} />
 
-      {/* Segmented bar */}
-      <div className="h-4 w-full overflow-hidden rounded-full bg-muted flex">
-        {segments.map((seg) => (
-          <div
-            key={seg.status}
-            className={`${seg.color} h-full transition-all`}
-            style={{ width: `${seg.pct}%` }}
-            title={`${seg.label}: ${seg.count} (${seg.pct}%)`}
-          />
-        ))}
+        {/* Legend */}
+        <div className="flex flex-col gap-3 flex-1">
+          {segments.map((seg) => (
+            <div key={seg.status} className="flex items-center gap-3">
+              <div className={`h-3 w-3 rounded-full ${seg.color} shrink-0`} />
+              <div className="flex-1 flex items-center justify-between">
+                <span className="text-sm text-foreground">{seg.label}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-foreground">{seg.count}</span>
+                  <span className="text-xs text-muted-foreground w-10 text-right">{seg.pct}%</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Legend */}
-      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-        {segments.map((seg) => (
-          <div key={seg.status} className="flex items-center gap-1.5">
-            <div className={`h-2.5 w-2.5 rounded-full ${seg.color}`} />
-            <span>{seg.label}</span>
-            <span className="font-medium text-foreground">{seg.pct}%</span>
-          </div>
-        ))}
+      {/* Weekly Progress Bar */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span>Weekly Progress</span>
+          <span>{stats.total} total tasks</span>
+        </div>
+        <div className="h-3 w-full overflow-hidden rounded-full bg-muted/30 flex">
+          {segments.map((seg) => (
+            <div
+              key={seg.status}
+              className={`${seg.color} h-full transition-all duration-500`}
+              style={{ width: `${seg.pct}%` }}
+              title={`${seg.label}: ${seg.count} (${seg.pct}%)`}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
