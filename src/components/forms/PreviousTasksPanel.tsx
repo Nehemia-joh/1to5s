@@ -8,14 +8,7 @@ import { Button } from "@/components/ui/button";
 import { TaskStatusPicker } from "@/components/forms/TaskStatusPicker";
 import { formatDateTimeLabel } from "@/lib/dates";
 import type { TaskRow } from "@/lib/queries/entries";
-import { ArrowRight, CheckCircle2, Clock, Circle, AlertCircle } from "lucide-react";
-
-const STATUS_ICONS: Record<string, React.ReactNode> = {
-  completed: <CheckCircle2 className="h-4 w-4 text-primary" />,
-  in_progress: <Clock className="h-4 w-4 text-highlight" />,
-  not_started: <Circle className="h-4 w-4 text-muted-foreground" />,
-  abandoned: <AlertCircle className="h-4 w-4 text-destructive" />,
-};
+import { ArrowRight, Clock } from "lucide-react";
 
 export function PreviousTasksPanel({
   dateLabel,
@@ -49,25 +42,23 @@ export function PreviousTasksPanel({
       <CardContent className="flex flex-col gap-2">
         {tasks.map((task) => {
           const canCarry = carryoverEnabled && (!task.status || task.status === "not_started" || task.status === "in_progress");
-          const statusIcon = task.status ? STATUS_ICONS[task.status] : null;
 
           return (
             <div
               key={task.id}
-              className="flex flex-col gap-2 rounded-lg bg-card p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between"
+              className="rounded-lg bg-white p-3 shadow-sm space-y-2"
             >
-              {/* Task info */}
-              <div className="flex items-center gap-2 flex-1 min-w-0">
-                {statusIcon}
-                <span className="text-sm truncate flex-1">{task.taskText}</span>
+              {/* Task text */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm flex-1 min-w-0">{task.taskText}</span>
                 {task.createdAt ? (
-                  <span className="text-[10px] text-muted-foreground whitespace-nowrap hidden sm:inline">
+                  <span className="text-[10px] text-muted-foreground shrink-0">
                     {formatDateTimeLabel(task.createdAt)}
                   </span>
                 ) : null}
               </div>
 
-              {/* Actions */}
+              {/* Actions row */}
               <div className="flex items-center gap-2 flex-wrap">
                 <TaskStatusPicker taskId={task.id} initialStatus={task.status} />
                 {canCarry ? (

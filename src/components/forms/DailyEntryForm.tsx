@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { TaskStatusPicker } from "@/components/forms/TaskStatusPicker";
 import { formatDateTimeLabel } from "@/lib/dates";
-import { Plus, Trash2, GripVertical } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 
 type ExistingTask = {
   id: number;
@@ -40,7 +40,6 @@ export function DailyEntryForm({
 }) {
   const [state, formAction, pending] = useActionState(saveEntry, undefined);
 
-  // Initialize rows from existing tasks, always with at least one empty row
   const [rows, setRows] = useState<TaskRow[]>(() => {
     const existing = existingTasks.map((t) => ({ id: t.id, text: t.taskText }));
     if (existing.length === 0) return [{ id: null, text: "" }];
@@ -67,16 +66,16 @@ export function DailyEntryForm({
     setRows(newRows);
   };
 
-  // Map existing tasks by id for quick lookup
   const existingTaskMap = new Map(existingTasks.map((t) => [t.id, t]));
 
   return (
-    <form action={formAction} className="flex flex-col gap-5">
+    <form action={formAction} className="flex flex-col gap-4">
       <input type="hidden" name="today" value={today} />
 
-      <div className="flex flex-col gap-3">
-        <Label className="text-primary font-medium">Today&apos;s tasks</Label>
-        <p className="text-xs text-muted-foreground">Add at least one task for today</p>
+      {/* Tasks Section */}
+      <div className="flex flex-col gap-2">
+        <Label className="text-primary font-medium text-base">Today&apos;s tasks</Label>
+        <p className="text-xs text-muted-foreground mb-1">Add at least one task for today</p>
 
         <div className="flex flex-col gap-3">
           {rows.map((row, index) => {
@@ -84,52 +83,48 @@ export function DailyEntryForm({
             return (
               <div
                 key={row.id ?? `new-${index}`}
-                className="flex flex-col gap-2 rounded-lg border bg-muted/20 p-3 sm:flex-row sm:items-center sm:gap-2"
+                className="rounded-lg border bg-white p-3 shadow-sm"
               >
-                {/* Task number indicator */}
-                <div className="hidden sm:flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-medium shrink-0">
-                  {index + 1}
-                </div>
-
-                {/* Hidden task ID */}
-                <input type="hidden" name="taskId" value={row.id ?? ""} />
-
-                {/* Task input */}
-                <div className="flex-1 min-w-0">
+                {/* Task number and input */}
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-white text-xs font-medium shrink-0">
+                    {index + 1}
+                  </div>
+                  <input type="hidden" name="taskId" value={row.id ?? ""} />
                   <Input
                     name="taskText"
                     placeholder={`Task ${index + 1}`}
                     value={row.text}
                     onChange={(e) => updateRowText(index, e.target.value)}
                     maxLength={500}
-                    className="w-full bg-white"
+                    className="flex-1 h-10 text-sm"
                   />
                 </div>
 
-                {/* Status and metadata row */}
-                <div className="flex items-center gap-2 flex-wrap">
-                  {existingTask ? (
-                    <>
-                      <TaskStatusPicker taskId={existingTask.id} initialStatus={existingTask.status} />
-                      {existingTask.createdAt ? (
-                        <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                          {formatDateTimeLabel(existingTask.createdAt)}
-                        </span>
-                      ) : null}
-                    </>
-                  ) : null}
+                {/* Status and actions row */}
+                <div className="flex items-center justify-between gap-2 ml-8">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    {existingTask ? (
+                      <>
+                        <TaskStatusPicker taskId={existingTask.id} initialStatus={existingTask.status} />
+                        {existingTask.createdAt ? (
+                          <span className="text-[10px] text-muted-foreground hidden sm:inline">
+                            {formatDateTimeLabel(existingTask.createdAt)}
+                          </span>
+                        ) : null}
+                      </>
+                    ) : null}
+                  </div>
 
-                  {/* Remove button */}
                   {rows.length > 1 ? (
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
                       onClick={() => removeRow(index)}
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0 sm:h-auto sm:w-auto sm:px-2"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0 shrink-0"
                     >
                       <Trash2 className="h-4 w-4" />
-                      <span className="hidden sm:inline sm:ml-1">Remove</span>
                     </Button>
                   ) : null}
                 </div>
@@ -138,14 +133,13 @@ export function DailyEntryForm({
           })}
         </div>
 
-        {/* Add task button */}
         {rows.length < MAX_TASKS ? (
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={addRow}
-            className="self-start gap-1.5 border-dashed"
+            className="self-start gap-1.5 border-dashed mt-1"
           >
             <Plus className="h-4 w-4" />
             Add another task
@@ -153,6 +147,7 @@ export function DailyEntryForm({
         ) : null}
       </div>
 
+      {/* Blocker */}
       <div className="flex flex-col gap-2">
         <Label htmlFor="blocker" className="text-primary font-medium">
           Blocker
@@ -163,10 +158,11 @@ export function DailyEntryForm({
           placeholder="Anything in your way? (optional)"
           defaultValue={blocker}
           maxLength={1000}
-          className="bg-white"
+          className="bg-white min-h-[80px]"
         />
       </div>
 
+      {/* Yesterday Comment */}
       <div className="flex flex-col gap-2">
         <Label htmlFor="yesterdayComment" className="text-primary font-medium">
           On yesterday
@@ -177,17 +173,19 @@ export function DailyEntryForm({
           placeholder="A note on how yesterday went (optional)"
           defaultValue={yesterdayComment}
           maxLength={1000}
-          className="bg-white"
+          className="bg-white min-h-[80px]"
         />
       </div>
 
+      {/* Error */}
       {state?.error ? (
         <div className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
           {state.error}
         </div>
       ) : null}
 
-      <Button type="submit" disabled={pending} className="self-start gap-2">
+      {/* Submit */}
+      <Button type="submit" disabled={pending} className="w-full sm:w-auto self-start gap-2 h-11">
         {pending ? (
           <>
             <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />

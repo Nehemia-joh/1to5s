@@ -25,8 +25,8 @@ export function TaskStatusPicker({ taskId, initialStatus }: { taskId: number; in
         });
       }}
     >
-      <SelectTrigger size="sm" className="w-40" disabled={pending}>
-        <SelectValue placeholder="Not yet marked">{(value: string | null) => (value ? STATUS_LABELS[value] : "Not yet marked")}</SelectValue>
+      <SelectTrigger size="sm" className="w-full sm:w-36 h-8 text-xs" disabled={pending}>
+        <SelectValue placeholder="Not marked">{(value: string | null) => (value ? STATUS_LABELS[value] : "Not marked")}</SelectValue>
       </SelectTrigger>
       <SelectContent>
         {Object.entries(STATUS_LABELS).map(([value, label]) => (
