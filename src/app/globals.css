@@ -87,8 +87,6 @@
   --brand-accent: #ffc952;
 }
 
-/* Daily 1-5s uses one fixed brand theme; no dark-mode toggle is offered,
-   so .dark mirrors :root to keep OS-level dark mode from breaking branding. */
 .dark {
   --background: #ececec;
   --foreground: #000000;
@@ -134,5 +132,33 @@
   }
   html {
     @apply font-sans;
+  }
+}
+
+/* Custom utility classes for brand colors */
+@layer utilities {
+  .bg-brand-primary {
+    background-color: #002368;
+  }
+  .bg-brand-light {
+    background-color: #80bfec;
+  }
+  .bg-brand-accent {
+    background-color: #ffc952;
+  }
+  .text-brand-primary {
+    color: #002368;
+  }
+  .text-brand-light {
+    color: #80bfec;
+  }
+  .text-brand-accent {
+    color: #ffc952;
+  }
+  .border-brand-primary {
+    border-color: #002368;
+  }
+  .border-brand-accent {
+    border-color: #ffc952;
   }
 }
