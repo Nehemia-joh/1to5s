@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 
 import { logout } from "@/lib/actions/auth";
@@ -34,9 +35,14 @@ export function NavBar({ name, links }: { name: string; links: { href: string; l
       <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-accent">
-            <span className="text-primary text-sm font-bold">1-5</span>
-          </div>
+          <Image
+            src="/icon.png"
+            alt="Daily 1-5s"
+            width={32}
+            height={32}
+            className="rounded-lg"
+            priority
+          />
           <span className="text-white font-semibold hidden sm:inline">Daily 1-5s</span>
         </Link>
 
@@ -87,9 +93,13 @@ export function NavBar({ name, links }: { name: string; links: { href: string; l
         <div className="md:hidden border-t border-white/10 px-4 py-3 space-y-2">
           {/* User info */}
           <div className="flex items-center gap-2 pb-2 border-b border-white/10">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-accent text-primary text-sm font-bold">
-              {name.charAt(0).toUpperCase()}
-            </div>
+            <Image
+              src="/icon.png"
+              alt="Daily 1-5s"
+              width={28}
+              height={28}
+              className="rounded-lg"
+            />
             <span className="text-sm text-white/90">{name}</span>
           </div>
 

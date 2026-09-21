@@ -1,9 +1,9 @@
+import Image from "next/image";
 import { redirect } from "next/navigation";
 
 import { requireUser } from "@/lib/auth-guard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { WelcomeForm } from "@/components/forms/WelcomeForm";
-import { PartyPopper } from "lucide-react";
 
 export default async function WelcomePage() {
   const session = await requireUser();
@@ -17,14 +17,24 @@ export default async function WelcomePage() {
       <div className="w-full max-w-md space-y-5">
         {/* Header */}
         <div className="flex flex-col items-center gap-3 text-center">
-          <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-brand-accent shadow-lg">
-            <PartyPopper className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
-          </div>
+          <Image
+            src="/icon.png"
+            alt="Daily 1-5s"
+            width={64}
+            height={64}
+            className="rounded-full shadow-lg"
+            priority
+          />
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-white">Welcome to Daily 1-5s!</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-white">Welcome to Daily 1-5s! 🎉</h1>
             <p className="mt-1 sm:mt-2 text-sm sm:text-base text-white/70">Let&apos;s get you set up</p>
           </div>
         </div>
+
+        {/* Encouragement */}
+        <p className="text-center text-white/80 text-sm">
+          You&apos;re one step away from crushing your daily goals!
+        </p>
 
         {/* Card */}
         <Card className="border-0 shadow-2xl">
