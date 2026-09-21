@@ -1,0 +1,335 @@
+================================================================================
+                    DAILY 1-5s — USER GUIDELINES & MANUAL
+                          Silverleaf Technologies
+================================================================================
+
+TABLE OF CONTENTS
+-----------------
+  1. System Overview
+  2. Getting Started (First-Time Login)
+  3. Member User Journey
+  4. Admin User Journey
+  5. Feature Reference Guide
+  6. Cron Jobs & Automation
+  7. Troubleshooting & FAQ
+
+================================================================================
+1. SYSTEM OVERVIEW
+================================================================================
+
+Daily 1-5s is a lightweight standup replacement that helps teams track daily
+tasks, blockers, and progress. Instead of lengthy meetings, team members
+submit their 1-5 (up to 5 tasks) each working day.
+
+Key Concepts:
+  • Tasks: Items you're working on today (unlimited per day)
+  • Status: Each task can be marked as:
+      - Not Started: You haven't begun yet
+      - In Progress: You're actively working on it
+      - Completed: You finished it
+      - Abandoned: You dropped this task
+  • Blocker: Anything preventing you from making progress
+  • Yesterday Comment: A quick note on how yesterday went
+  • Carryover: Bring unfinished tasks from previous days forward
+
+URL: https://1to5.vercel.app
+
+================================================================================
+2. GETTING STARTED (FIRST-TIME LOGIN)
+================================================================================
+
+FOR EXISTING MEMBERS (added by admin):
+  1. Go to https://1to5.vercel.app
+  2. Enter your work email (the one your admin registered)
+  3. Click "Continue"
+  4. You're in! Start submitting your daily 1-5
+
+FOR SELF-SIGNUP (@silverleaf.co.tz emails):
+  1. Go to https://1to5.vercel.app
+  2. Enter your @silverleaf.co.tz email
+  3. Click "Continue"
+  4. You'll see the Welcome page — enter your name
+  5. Click "Continue"
+  6. You're now a team member! Start submitting tasks
+
+Note: Only @silverleaf.co.tz emails can self-signup. Other emails must be
+added by an admin first.
+
+================================================================================
+3. MEMBER USER JOURNEY
+================================================================================
+
+DAILY WORKFLOW:
+---------------
+
+Morning (before 9:30 AM EAT):
+  1. Log in at https://1to5.vercel.app
+  2. You'll land on Today's form
+  3. Add your tasks for the day (at least one)
+  4. Optionally add a blocker or yesterday comment
+  5. Click "Save today's 1-5"
+  ✅ You're marked as "Submitted" for the day
+
+Morning (after 9:30 AM EAT — late submission):
+  • Same as above, but you'll be marked as "Late"
+  • Your tasks are still saved and visible
+
+Before 1:00 PM EAT (deadline):
+  • If you haven't submitted by 1:00 PM, you'll be marked "Not Submitted"
+  • You can still submit after this — it just changes the attendance record
+  • Your tasks are always saved and viewable
+
+VIEWING YOUR HISTORY:
+---------------------
+  1. Click "History" in the navigation
+  2. See your weekly stats at the top (donut chart + progress bar)
+  3. Scroll down to see all past submissions
+  4. Each day shows your tasks, status, and any comments
+
+MARKING TASK STATUS:
+--------------------
+  • On the form page, use the dropdown next to each task
+  • In History, tasks show their current status with icons
+  • You can change status anytime (e.g., mark "In Progress" → "Completed")
+
+CARRYING TASKS FORWARD:
+-----------------------
+  If enabled by admin:
+  1. On today's form, see "How did [Yesterday] go?" panel
+  2. Unfinished tasks show a "Carry to today" button
+  3. Click to add that task to today's list
+  4. Edit the task text if needed, then save
+
+MEMBER NAVIGATION:
+------------------
+  • Today    → Submit/update today's tasks
+  • History  → View past submissions and weekly stats
+  • Admin    → (Admins only) Access admin dashboard
+
+================================================================================
+4. ADMIN USER JOURNEY
+================================================================================
+
+ADMIN DASHBOARD PAGES:
+----------------------
+
+Board (/admin/board)
+  • Today's attendance overview for all team members
+  • See who submitted, who's late, who's missing
+  • Search by name or email
+  • Skip attendance for users (mark as excused)
+
+Weekly (/admin/weekly)
+  • Grid view of the entire week
+  • See each person's status for Mon–Sun
+  • Color-coded badges for quick scanning
+
+Roster (/admin/roster)
+  • Manage team members
+  • Add new members by email
+  • Deactivate/reactivate members
+  • Import members from spreadsheet
+  • Promote/demote admin status
+
+Calendar (/admin/calendar)
+  • Manage holidays and extra working days
+  • Mark days as holidays (no 1-5 required)
+  • Mark weekends as extra working days when needed
+
+Settings (/admin/settings)
+  • Toggle Task Carryover on/off
+  • When enabled, members can carry forward unfinished tasks
+
+Logs (/admin/logs)
+  • View audit trail of all system actions
+  • See who did what and when
+  • Track cron job executions
+
+VIEWING INDIVIDUAL USERS:
+-------------------------
+  1. Go to Roster or Board
+  2. Click any team member's name
+  3. See their weekly stats (donut chart)
+  4. View their complete submission history
+  5. Track their task completion patterns
+
+MANAGING TEAM MEMBERS:
+----------------------
+
+Adding a New Member:
+  1. Go to Roster
+  2. Click "Add Member"
+  3. Enter their email and name
+  4. They can now log in and submit tasks
+
+Deactivating a Member:
+  1. Go to Roster
+  2. Find the member
+  3. Click "Deactivate"
+  4. They can no longer log in (data preserved)
+
+Promoting to Admin:
+  1. Go to Roster
+  2. Find the member
+  3. Click "Promote to Admin"
+  4. They now have full admin access
+
+MANAGING ATTENDANCE:
+--------------------
+  On the Board page:
+  1. Find the team member
+  2. If they're "Late" or "Not Submitted", you can Skip them
+  3. Click "Skip" and provide a reason (optional)
+  4. Their status changes to "Skipped" (excused absence)
+
+MANAGING HOLIDAYS:
+------------------
+  1. Go to Calendar
+  2. Click "Add Holiday"
+  3. Select the date and enter a label
+  4. No 1-5s are required on holidays
+
+  To add an extra working day (e.g., working on a weekend):
+  1. Go to Calendar
+  2. Click "Add Extra Day"
+  3. Select the date
+  4. Team members must submit 1-5 on this day
+
+================================================================================
+5. FEATURE REFERENCE GUIDE
+================================================================================
+
+UNLIMITED TASKS:
+  • Previously limited to 3 tasks per day
+  • Now you can add as many as you need (up to 30 as sanity limit)
+  • Click "+ Add another task" to add more
+  • Click "Remove" to delete a task row
+  • Empty tasks are not saved
+
+TASK CARRYOVER:
+  • Controlled by admin in Settings
+  • Default: OFF
+  • When ON:
+    - Unfinished tasks from previous days appear on today's form
+    - Click "Carry to today" to add them
+    - The task is copied (not linked) — original stays intact
+    - You can edit the carried task before saving
+
+WEEKLY STATS:
+  • Donut chart shows task distribution for the current week
+  • Progress bar shows completion percentages
+  • Status breakdown:
+    - Completed (green/blue)
+    - In Progress (light blue)
+    - Not Started (gold/yellow)
+    - Abandoned (red)
+    - Not Yet Marked (gray)
+  • Visible to both members (own stats) and admins (any user)
+
+TASK TIMESTAMPS:
+  • Each task shows when it was created
+  • Visible on form, history, and admin views
+  • Helps track when tasks were added during the day
+
+SELF-SIGNUP:
+  • Only @silverleaf.co.tz emails can self-signup
+  • New users are created as active members
+  • First login prompts for name
+  • Non-domain emails must be added by admin
+
+ATTENDANCE STATUSES:
+  • Submitted  — On time (before 9:30 AM EAT)
+  • Late       — After 9:30 AM cutoff
+  • Not Submitted — After 1:00 PM deadline
+  • Holiday    — No 1-5 required
+  • Weekend    — No 1-5 required (unless marked extra day)
+  • Skipped    — Excused by admin
+
+================================================================================
+6. CRON JOBS & AUTOMATION
+================================================================================
+
+The system runs two automated jobs:
+
+CUTOFF (9:30 AM EAT / 6:30 AM UTC):
+  • Marks users who haven't submitted as "Late"
+  • Creates attendance records for working days
+  • Marks holidays and weekends appropriately
+
+DEADLINE (1:00 PM EAT / 10:00 AM UTC):
+  • Changes "Late" status to "Not Submitted"
+  • Finalizes the day's attendance
+  • Entry data is preserved — only attendance record changes
+
+Note: These jobs run automatically on Vercel. No manual intervention needed.
+
+================================================================================
+7. TROUBLESHOOTING & FAQ
+================================================================================
+
+Q: "This page couldn't load" error
+A: • Try refreshing the page
+   • Check your internet connection
+   • If persistent, contact your admin
+
+Q: I can't log in
+A: • Make sure you're using the correct email
+   • @silverleaf.co.tz emails can self-signup
+   • Other emails must be added by admin first
+   • Check if your account is active
+
+Q: My tasks disappeared
+A: • Tasks are saved when you click "Save today's 1-5"
+   • If you didn't save, tasks are lost on page refresh
+   • Check History for previous submissions
+
+Q: I submitted but I'm still marked as "Not Submitted"
+A: • The deadline cron runs at 1:00 PM EAT
+   • If you submitted after the cron ran, your status stays
+   • Your tasks are still saved and visible
+   • Admin can manually adjust if needed
+
+Q: How do I change my name?
+A: • Contact your admin to update your name
+   • The system uses the name from your account
+
+Q: Can I delete a task?
+A: • Yes — clear the task text and save
+   • The task will be deleted
+   • Or change status to "Abandoned" to keep it visible
+
+Q: What's the difference between "Not Started" and "Not Yet Marked"?
+A: • "Not Started" = You explicitly marked it as not started
+   • "Not Yet Marked" = You haven't set a status yet (default)
+
+Q: Can I edit tasks after submitting?
+A: • Yes — edit anytime on the form page
+   • Status changes are saved separately
+   • Timestamps reflect original creation, not edits
+
+Q: How does carryover work?
+A: • Admin must enable it in Settings
+   • Previous day's unfinished tasks appear as suggestions
+   • Click "Carry to today" to add them
+   • You can edit before saving
+   • Original task stays unchanged
+
+Q: Why am I "Late"?
+A: • The cutoff is 9:30 AM EAT
+   • Submit before then to be "Submitted"
+   • After 9:30 AM = "Late" (but tasks still save)
+
+Q: Can I submit on weekends?
+A: • Only if admin marks it as an "Extra Day" in Calendar
+   • Otherwise, weekends show "No 1-5 today"
+
+================================================================================
+                         END OF GUIDELINES
+================================================================================
+
+Version: 1.0
+Last Updated: September 2025
+Support: Contact your admin or IT team
+URL: https://1to5.vercel.app
+
+================================================================================
