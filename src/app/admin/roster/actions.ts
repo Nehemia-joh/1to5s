@@ -6,7 +6,7 @@ import { read, utils } from "xlsx";
 import { z } from "zod";
 
 import { getDb } from "@/db";
-import { users, entries, entryTasks, attendance } from "@/db/schema";
+import { users } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth-guard";
 import { writeAuditLog } from "@/lib/audit";
 
@@ -215,19 +215,7 @@ export async function deleteRosterMember(userId: number): Promise<DeleteMemberRe
     }
   }
 
-  // Delete related data first (cascade would handle this, but being explicit)
-  // Delete entry tasks for this user's entries
-  const userEntries = await db.select({ id: entries.id }).from(entries).where(eq(entries.userId, userId));
-  if (userEntries.length > 0) {
-    const entryIds = userEntries.map((e) => e.id);
-    await db.delete(entryTasks).where(sql`${entryTasks.entryId} IN ${entryIds}`);
-    await db.delete(entries).where(eq(entries.userId, userId));
-  }
-
-  // Delete attendance records
-  await db.delete(attendance).where(eq(attendance.userId, userId));
-
-  // Finally delete the user
+  // Delete the user - database cascade will handle entries, tasks, and attendance
   await db.delete(users).where(eq(users.id, userId));
 
   await writeAuditLog({
