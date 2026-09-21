@@ -1,7 +1,6 @@
-import { relations, sql } from "drizzle-orm";
+import { relations } from "drizzle-orm";
 import {
   boolean,
-  check,
   date,
   index,
   integer,
@@ -27,7 +26,7 @@ export const taskStatus = pgEnum("task_status", [
 export const attendanceStatus = pgEnum("attendance_status", [
   "submitted",
   "late",
-  "missed",
+  "not_submitted",
   "holiday",
   "weekend",
   "skipped",
@@ -69,10 +68,10 @@ export const entryTasks = pgTable(
     taskText: text("task_text").notNull(),
     status: taskStatus("status"),
     statusUpdatedAt: timestamp("status_updated_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     unique("entry_tasks_entry_slot_unique").on(t.entryId, t.slot),
-    check("entry_tasks_slot_range", sql`${t.slot} between 1 and 3`),
   ],
 );
 
@@ -141,3 +140,8 @@ export const attendanceRelations = relations(attendance, ({ one }) => ({
 export const auditLogRelations = relations(auditLog, ({ one }) => ({
   actor: one(users, { fields: [auditLog.actorId], references: [users.id] }),
 }));
+
+export const appSettings = pgTable("app_settings", {
+  id: integer("id").primaryKey().default(1),
+  taskCarryoverEnabled: boolean("task_carryover_enabled").notNull().default(false),
+});

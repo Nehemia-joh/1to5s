@@ -14,7 +14,8 @@ export type AuditAction =
   | "calendar.remove_extra_day"
   | "attendance.mark_skipped"
   | "cron.cutoff_run"
-  | "cron.finalize_run";
+  | "cron.deadline_run"
+  | "settings.update";
 
 export async function writeAuditLog(params: {
   actorId: number | null;

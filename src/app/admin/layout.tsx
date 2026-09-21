@@ -7,6 +7,7 @@ const ADMIN_LINKS = [
   { href: "/admin/weekly", label: "Weekly" },
   { href: "/admin/roster", label: "Roster" },
   { href: "/admin/calendar", label: "Calendar" },
+  { href: "/admin/settings", label: "Settings" },
   { href: "/admin/logs", label: "Logs" },
 ];
 

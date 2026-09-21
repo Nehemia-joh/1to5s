@@ -1,6 +1,7 @@
 import { requireUser } from "@/lib/auth-guard";
 import { classifyDate, formatDateLabel, previousWorkingDay, todayInTz } from "@/lib/dates";
 import { getEntryWithTasks } from "@/lib/queries/entries";
+import { getSettings } from "@/lib/queries/settings";
 import { memberLinks, NavBar } from "@/components/layout/NavBar";
 import { DailyEntryForm } from "@/components/forms/DailyEntryForm";
 import { PreviousTasksPanel } from "@/components/forms/PreviousTasksPanel";
@@ -19,6 +20,8 @@ export default async function FormPage({ searchParams }: { searchParams: Promise
   const prevDay = await previousWorkingDay(today);
   const prevEntry = prevDay ? await getEntryWithTasks(userId, prevDay) : null;
 
+  const settings = await getSettings();
+
   return (
     <>
       <NavBar name={session.name} links={memberLinks(session.role === "admin")} />
@@ -26,7 +29,11 @@ export default async function FormPage({ searchParams }: { searchParams: Promise
         <h1 className="text-primary text-xl font-medium">{formatDateLabel(today)}</h1>
 
         {prevEntry && prevEntry.tasks.length > 0 ? (
-          <PreviousTasksPanel dateLabel={formatDateLabel(prevDay!)} tasks={prevEntry.tasks} />
+          <PreviousTasksPanel
+            dateLabel={formatDateLabel(prevDay!)}
+            tasks={prevEntry.tasks}
+            carryoverEnabled={settings.taskCarryoverEnabled}
+          />
         ) : null}
 
         {dayType === "holiday" || dayType === "weekend" ? (

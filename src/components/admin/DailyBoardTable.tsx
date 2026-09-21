@@ -12,7 +12,7 @@ import type { BoardRow } from "@/lib/queries/attendance";
 const STATUS_LABELS: Record<string, string> = {
   submitted: "Submitted",
   late: "Late",
-  missed: "Missed",
+  not_submitted: "Not submitted",
   holiday: "Holiday",
   weekend: "Weekend",
   skipped: "Skipped",
@@ -21,7 +21,7 @@ const STATUS_LABELS: Record<string, string> = {
 const STATUS_VARIANTS: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
   submitted: "secondary",
   late: "outline",
-  missed: "destructive",
+  not_submitted: "destructive",
   holiday: "outline",
   weekend: "outline",
   skipped: "secondary",
@@ -66,7 +66,7 @@ export function DailyBoardTable({ date, rows }: { date: string; rows: BoardRow[]
             ) : (
               filtered.map((row) => {
                 const status = row.status ?? "not_submitted";
-                const canSkip = status === "late" || status === "missed";
+                const canSkip = status === "late" || status === "not_submitted";
                 return (
                   <TableRow key={row.userId}>
                     <TableCell>
